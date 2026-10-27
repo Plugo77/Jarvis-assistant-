@@ -1,0 +1,405 @@
+
+
+<!DOCTYPE html>
+
+<html lang="de">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="theme-color" content="#080d18">
+
+  <title>JARVIS AI</title>
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body {
+
+      margin: 0;
+
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+
+      background: #080d18;
+
+      color: #eef5ff;
+
+      min-height: 100vh;
+
+    }
+
+    header {
+
+      padding: 24px 20px 16px;
+
+      border-bottom: 1px solid #1b3550;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+    }
+
+    .orb {
+
+      width: 42px; height: 42px; border-radius: 50%;
+
+      background: radial-gradient(circle, #c7f5ff, #29a9ff 45%, #153e83 75%);
+
+      box-shadow: 0 0 24px #168cff88;
+
+    }
+
+    h1 { margin: 0; font-size: 22px; letter-spacing: 3px; }
+
+    .sub { color: #79b9e9; font-size: 12px; margin-top: 4px; }
+
+    main { max-width: 650px; margin: auto; padding: 20px; }
+
+    .status {
+
+      border: 1px solid #204362; border-radius: 14px;
+
+      padding: 15px; background: #0c1728; margin-bottom: 18px;
+
+    }
+
+    .dot { color: #57e6b1; }
+
+    .section-title { color: #8ebee5; font-size: 12px; letter-spacing: 2px; margin: 24px 0 12px; }
+
+    .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    button, input {
+
+      font: inherit; border-radius: 12px; padding: 14px;
+
+    }
+
+    button {
+
+      background: #112641; color: #eaf5ff;
+
+      border: 1px solid #285178; cursor: pointer;
+
+    }
+
+    button:active { background: #1b4269; }
+
+    .chat {
+
+      min-height: 180px; max-height: 320px; overflow-y: auto;
+
+      background: #0b1423; border: 1px solid #1b3550;
+
+      border-radius: 14px; padding: 14px;
+
+    }
+
+    .msg { margin: 0 0 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+    .who { color: #67c9ff; font-size: 12px; margin-bottom: 4px; }
+
+    .composer { display: flex; gap: 8px; margin-top: 10px; }
+
+    input { min-width: 0; flex: 1; background: #101e31; color: white; border: 1px solid #294461; }
+
+    .send { background: #087dcc; }
+
+    .taskrow { display: flex; gap: 10px; margin-top: 10px; }
+
+    .taskrow input { width: 0; }
+
+    #tasks { padding: 0; list-style: none; }
+
+    #tasks li { padding: 12px; border-bottom: 1px solid #203249; overflow-wrap: anywhere; }
+
+    #tasks label { display: flex; gap: 10px; align-items: center; }
+
+    .note { color: #9db2c9; font-size: 12px; line-height: 1.6; margin-top: 20px; }
+
+  </style>
+
+</head>
+
+<body>
+
+  <header>
+
+    <div class="orb"></div>
+
+    <div>
+
+      <h1>JARVIS</h1>
+
+      <div class="sub">PERSONAL ASSISTANT · WEB EDITION</div>
+
+    </div>
+
+  </header>
+
+  <main>
+
+    <div class="status">
+
+      <div><span class="dot">●</span> SYSTEM ONLINE</div>
+
+      <div class="sub" id="clock">Bereit</div>
+
+    </div>
+
+    <div class="section-title">SCHNELLZUGRIFF</div>
+
+    <div class="quick">
+
+      <button onclick="openSite('https://www.google.com')">Google öffnen ↗</button>
+
+      <button onclick="openSite('https://www.youtube.com')">YouTube öffnen ↗</button>
+
+      <button onclick="speak('Ich bin bereit. Was soll ich tun?')">🔊 Sprechen</button>
+
+      <button onclick="listen()">🎙️ Spracheingabe</button>
+
+    </div>
+
+    <div class="section-title">ASSISTENT</div>
+
+    <div class="chat" id="chat" aria-live="polite">
+
+      <div class="msg"><div class="who">JARVIS</div>System gestartet. Ich bin bereit. Du kannst mir eine Nachricht schreiben oder eine Aufgabe hinzufügen.</div>
+
+    </div>
+
+    <div class="composer">
+
+      <input id="message" placeholder="Schreibe eine Nachricht…" />
+
+      <button class="send" onclick="sendMessage()">Senden</button>
+
+    </div>
+
+    <div class="section-title">MEINE AUFGABEN</div>
+
+    <div class="taskrow">
+
+      <input id="taskInput" placeholder="Neue Aufgabe…" />
+
+      <button onclick="addTask()">+ Hinzufügen</button>
+
+    </div>
+
+    <ul id="tasks"></ul>
+
+    <p class="note">Prototyp 1.0 · Die Aufgaben bleiben auf diesem Gerät gespeichert. KI-Chat und PC-Steuerung werden in späteren Schritten verbunden. Spracheingabe hängt von der Browser-Unterstützung ab.</p>
+
+  </main>
+
+  <script>
+
+    const $ = id => document.getElementById(id);
+
+    function tick() {
+
+      $('clock').textContent = new Date().toLocaleString('de-DE');
+
+    }
+
+    tick();
+
+    setInterval(tick, 1000);
+
+    function openSite(url) { window.open(url, '_blank', 'noopener'); }
+
+    function speak(text) {
+
+      if (!('speechSynthesis' in window)) {
+
+        alert('Sprachausgabe wird in diesem Browser nicht unterstützt.');
+
+        return;
+
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      utterance.lang = 'de-DE';
+
+      speechSynthesis.speak(utterance);
+
+    }
+
+    function listen() {
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+
+        alert('Spracheingabe ist hier nicht verfügbar. Du kannst die iPhone-Diktierfunktion auf der Tastatur verwenden.');
+
+        return;
+
+      }
+
+      const recognition = new SpeechRecognition();
+
+      recognition.lang = 'de-DE';
+
+      recognition.onresult = event => {
+
+        $('message').value = event.results[0][0].transcript;
+
+      };
+
+      recognition.onerror = () => alert('Spracheingabe fehlgeschlagen. Bitte versuche es erneut.');
+
+      recognition.start();
+
+    }
+
+    function addMessage(who, text) {
+
+      const wrapper = document.createElement('div');
+
+      wrapper.className = 'msg';
+
+      const label = document.createElement('div');
+
+      label.className = 'who';
+
+      label.textContent = who;
+
+      const body = document.createElement('div');
+
+      body.textContent = text;
+
+      wrapper.append(label, body);
+
+      $('chat').appendChild(wrapper);
+
+      $('chat').scrollTop = $('chat').scrollHeight;
+
+    }
+
+    function sendMessage() {
+
+      const input = $('message');
+
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      addMessage('DU', text);
+
+      input.value = '';
+
+      addMessage('JARVIS', 'Ich habe deine Nachricht erhalten. Eine echte KI wird in einem späteren Schritt verbunden.');
+
+    }
+
+    $('message').addEventListener('keydown', e => {
+
+      if (e.key === 'Enter') sendMessage();
+
+    });
+
+    function loadTasks() {
+
+      try {
+
+        const tasks = JSON.parse(localStorage.getItem('jarvis_tasks') || '[]');
+
+        $('tasks').replaceChildren();
+
+        tasks.forEach((task, index) => {
+
+          const li = document.createElement('li');
+
+          const label = document.createElement('label');
+
+          const checkbox = document.createElement('input');
+
+          checkbox.type = 'checkbox';
+
+          checkbox.checked = task.done;
+
+          checkbox.addEventListener('change', () => {
+
+            const current = JSON.parse(localStorage.getItem('jarvis_tasks') || '[]');
+
+            current[index].done = checkbox.checked;
+
+            localStorage.setItem('jarvis_tasks', JSON.stringify(current));
+
+            loadTasks();
+
+          });
+
+          const span = document.createElement('span');
+
+          span.textContent = task.text;
+
+          if (task.done) span.style.textDecoration = 'line-through';
+
+          const remove = document.createElement('button');
+
+          remove.textContent = 'Löschen';
+
+          remove.addEventListener('click', () => {
+
+            const current = JSON.parse(localStorage.getItem('jarvis_tasks') || '[]');
+
+            current.splice(index, 1);
+
+            localStorage.setItem('jarvis_tasks', JSON.stringify(current));
+
+            loadTasks();
+
+          });
+
+          label.append(checkbox, span);
+
+          li.append(label, remove);
+
+          $('tasks').appendChild(li);
+
+        });
+
+      } catch { $('tasks').replaceChildren(); }
+
+    }
+
+    function addTask() {
+
+      const input = $('taskInput');
+
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      let tasks = [];
+
+      try { tasks = JSON.parse(localStorage.getItem('jarvis_tasks') || '[]'); } catch {}
+
+      tasks.push({ text, done: false });
+
+      localStorage.setItem('jarvis_tasks', JSON.stringify(tasks));
+
+      input.value = '';
+
+      loadTasks();
+
+    }
+
+    loadTasks();
+
+  </script>
+
+</body>
+
+</html>
